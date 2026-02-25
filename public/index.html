@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>🔥 AI Reel Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+    }
+    button {
+      padding: 8px 15px;
+      cursor: pointer;
+    }
+    hr {
+      margin: 30px 0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>🔥 AI Reel Generator</h1>
+
+  <!-- REGISTER SECTION -->
+  <h2>Register</h2>
+
+  <input id="regName" placeholder="Enter Name"><br><br>
+  <input id="regEmail" placeholder="Enter Email"><br><br>
+  <input id="regPassword" type="password" placeholder="Enter Password"><br><br>
+
+  <button onclick="register()">Register</button>
+
+  <hr>
+
+  <!-- LOGIN SECTION -->
+  <h2>Login</h2>
+
+  <input id="email" placeholder="Enter Email"><br><br>
+  <input id="password" type="password" placeholder="Enter Password"><br><br>
+
+  <button onclick="login()">Login</button>
+
+  <hr>
+
+  <!-- GENERATE SECTION -->
+  <h2>Generate Reel</h2>
+
+  <input id="topic" placeholder="Enter Topic"><br><br>
+  <input id="niche" placeholder="Enter Niche"><br><br>
+  <input id="style" placeholder="Enter Style"><br><br>
+
+  <label>Platform:</label>
+<select id="platform">
+  <option value="instagram">Instagram Reel</option>
+  <option value="youtube">YouTube Shorts</option>
+</select>
+
+<br><br>
+
+  <button onclick="generate()">Generate</button>
+
+  <h2>Result:</h2>
+  <pre id="result"></pre>
+
+
+<script>
+
+  // REGISTER FUNCTION
+  async function register() {
+
+    const name = document.getElementById("regName").value;
+    const email = document.getElementById("regEmail").value;
+    const password = document.getElementById("regPassword").value;
+
+    const res = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ name, email, password })
+    });
+
+    const data = await res.json();
+    alert(data.message || "Registered");
+
+  }
+
+
+  // LOGIN FUNCTION
+  async function login() {
+
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+
+    if (data.token) {
+      localStorage.setItem("token", data.token);
+      alert("✅ Login Successful");
+    } else {
+      alert("❌ " + (data.message || "Login failed"));
+    }
+  }
+
+
+  // GENERATE FUNCTION
+  async function generate() {
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("⚠️ Please login first!");
+      return;
+    }
+
+    const topic = document.getElementById("topic").value;
+    const niche = document.getElementById("niche").value;
+    const style = document.getElementById("style").value;
+    const platform = document.getElementById("platform").value;
+
+    const resultBox = document.getElementById("result");
+    resultBox.innerText = "Generating...";
+
+    try {
+
+      const response = await fetch("/generate-reel", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({
+          topic,
+          niche,
+          style,
+          platform
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        resultBox.innerText = "❌ " + (data.message || data.error || "Something went wrong");
+        return;
+      }
+
+      resultBox.innerText = data.result || JSON.stringify(data, null, 2);
+
+    } catch (error) {
+      resultBox.innerText = "❌ Server error";
+    }
+  }
+
+</script>
+
+</body>
+</html>
